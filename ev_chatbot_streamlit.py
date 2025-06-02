@@ -1,6 +1,10 @@
 # streamlit_app.py
 import streamlit as st
-import pandas as pd
+import openai
+import os
+
+# ---- Set OpenAI Key ----
+openai.api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else os.getenv("OPENAI_API_KEY")
 
 # ---- Chatbot Logic ----
 def user_classifier(message):
@@ -54,7 +58,21 @@ def response_generator(user_type, cluster):
             return "Modern BEVs offer better uptime, range, and charging convenience. Ideal for modern fleets."
         elif cluster == "Cluster 0":
             return "Legacy BEVs might work in limited routes. Consider using them until battery efficiency drops."
-    return "Hi! I’m your EV market assistant. Ask me about EV types, infrastructure, or fleet planning."
+    return None  # Changed to None to fallback to GPT if needed
+
+def gpt_response(prompt):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expert EV advisor based on real-world data analysis and recommendations."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200
+        )
+        return response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        return f"[GPT Error] {e}"
 
 # ---- Streamlit UI ----
 st.set_page_config(page_title="EV Market Chatbot", page_icon="🚗")
@@ -62,20 +80,31 @@ st.title("🚗 EV Market Advisor Chatbot")
 
 # Welcome Message
 with st.chat_message("assistant"):
-    st.markdown("Welcome! I can help you with EV buying advice, policy decisions, and fleet upgrades. Just type your question below.")
+    st.markdown("Welcome! I can help you with EV buying advice, policy decisions, and fleet upgrades. I also understand general EV topics.")
 
 # Role Selection
 role = st.selectbox("Select your role:", ["buyer", "policymaker", "fleet_manager"])
 
+# Session state for chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 # Chat Input
 if prompt := st.chat_input("Ask me anything about EVs..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # Try rule-based response first
     user_type = role
     cluster = cluster_matcher(prompt)
     reply = response_generator(user_type, cluster)
 
+    # Fallback to GPT if no predefined reply
+    if not reply:
+        reply = gpt_response(prompt)
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
     with st.chat_message("assistant"):
         st.markdown(reply)
 
@@ -83,6 +112,6 @@ if prompt := st.chat_input("Ask me anything about EVs..."):
     st.markdown("**Was this helpful?**")
     col1, col2 = st.columns(2)
     with col1:
-        st.button("👍 Yes", key="yes")
+        st.button("👍 Yes", key=f"yes_{len(st.session_state.messages)}")
     with col2:
-        st.button("👎 No", key="no")
+        st.button("👎 No", key=f"no_{len(st.session_state.messages)}")
