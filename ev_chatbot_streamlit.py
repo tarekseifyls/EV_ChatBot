@@ -1,4 +1,6 @@
+# streamlit_app.py
 import streamlit as st
+import pandas as pd
 
 # ---- Chatbot Logic ----
 def user_classifier(message):
@@ -58,10 +60,29 @@ def response_generator(user_type, cluster):
 st.set_page_config(page_title="EV Market Chatbot", page_icon="🚗")
 st.title("🚗 EV Market Advisor Chatbot")
 
-user_input = st.text_input("Ask me anything about electric vehicles, policy, or fleet planning:", "")
+# Welcome Message
+with st.chat_message("assistant"):
+    st.markdown("Welcome! I can help you with EV buying advice, policy decisions, and fleet upgrades. Just type your question below.")
 
-if user_input:
-    user_type = user_classifier(user_input)
-    cluster = cluster_matcher(user_input)
+# Role Selection
+role = st.selectbox("Select your role:", ["buyer", "policymaker", "fleet_manager"])
+
+# Chat Input
+if prompt := st.chat_input("Ask me anything about EVs..."):
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    user_type = role
+    cluster = cluster_matcher(prompt)
     reply = response_generator(user_type, cluster)
-    st.markdown(f"**Bot:** {reply}")
+
+    with st.chat_message("assistant"):
+        st.markdown(reply)
+
+    # Optional feedback
+    st.markdown("**Was this helpful?**")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("👍 Yes", key="yes")
+    with col2:
+        st.button("👎 No", key="no")
