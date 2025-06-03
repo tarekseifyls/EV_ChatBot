@@ -102,8 +102,7 @@ ev_cards = [
 cols = st.columns(3)
 for col, ev in zip(cols, ev_cards):
     with col:
-        st.image(ev["img"], caption=f"{ev['name']}
-Range: {ev['range']} | Price: {ev['price']}", use_container_width=True)
+       st.image(ev["img"], caption=f"{ev['name']}\nRange: {ev['range']} | Price: {ev['price']}", use_container_width=True)
 
 # Session state for chat history
 if "messages" not in st.session_state:
