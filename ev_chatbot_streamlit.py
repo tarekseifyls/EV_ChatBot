@@ -92,6 +92,18 @@ if st.sidebar.button("Budget EVs (< $40K)"):
 if st.sidebar.button("EVs for Families"):
     st.sidebar.success(recommend_ev("family"))
 
+# EV image cards
+st.subheader("🚗 Top EV Picks")
+ev_cards = [
+    {"name": "Tesla Model 3", "range": "358 mi", "price": "$39,990", "img": "https://tesla-cdn.thron.com/delivery/public/image/tesla/6cdb1ec9-8f2a-4fd9-9fc3-2f3e088eb282/bvlatuR/std/2880x1800/Model-3-Social"},
+    {"name": "Hyundai Ioniq 5", "range": "303 mi", "price": "$41,650", "img": "https://www.hyundaiusa.com/images/vehicles/2024/ioniq5/gallery/2024-hyundai-ioniq5-01.jpg"},
+    {"name": "Chevy Bolt", "range": "259 mi", "price": "$26,500", "img": "https://www.chevrolet.com/content/dam/chevrolet/na/us/english/index/vehicles/2023/electric/bolt-ev/mov/01-images/2023-bolt-ev-masthead-01.jpg?imwidth=960"}
+]
+cols = st.columns(3)
+for col, ev in zip(cols, ev_cards):
+    with col:
+        st.image(ev["img"], caption=f"{ev['name']}\nRange: {ev['range']} | Price: {ev['price']}", use_column_width=True)
+
 # Session state for chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
