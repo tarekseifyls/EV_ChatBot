@@ -2,69 +2,84 @@
 import streamlit as st
 
 # ---- Chatbot Logic ----
-def user_classifier(message):
-    message = message.lower()
-    if "buy" in message or "choose" in message or "recommend" in message:
-        return "buyer"
-    elif "infrastructure" in message or "policy" in message or "government" in message:
-        return "policymaker"
-    elif "fleet" in message or "replace" in message or "upgrade" in message:
-        return "fleet_manager"
+def intent_classifier(message):
+    msg = message.lower()
+    if any(x in msg for x in ["recommend", "best", "buy", "choose", "under"]):
+        return "recommendation"
+    elif any(x in msg for x in ["policy", "infrastructure", "government"]):
+        return "policy"
+    elif any(x in msg for x in ["fleet", "replace", "upgrade"]):
+        return "fleet"
+    return "general"
+
+def recommend_ev(message):
+    msg = message.lower()
+    if "long range" in msg or "200" in msg or "high range" in msg:
+        return "I recommend the Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles). Both are ideal for distance driving."
+    elif "cheap" in msg or "affordable" in msg or "under 40k" in msg or "under $40k" in msg or "budget" in msg:
+        return "Consider the Nissan Leaf, Chevy Bolt, or Hyundai Kona Electric — all are priced under $40,000 and perform well for everyday use."
+    elif "family" in msg or "big" in msg:
+        return "Try the Tesla Model Y or Kia EV6. Both offer great space and safety for families."
+    elif "phev" in msg:
+        return "Plug-in hybrids like the Chrysler Pacifica or Toyota Prius Prime are good for mixed use but have limited electric range."
+    elif "small" in msg:
+        return "The Mini Electric or Fiat 500e are compact and ideal for city driving."
     else:
-        return "general"
+        return "For a balanced option, Tesla Model 3 offers great range, performance, and value in the EV space."
 
 def cluster_matcher(message):
-    message = message.lower()
-    if "model y" in message or "modern" in message:
+    msg = message.lower()
+    if "model y" in msg or "modern" in msg:
         return "Cluster 2"
-    elif "model 3" in message or "older" in message or "2018" in message:
+    elif "model 3" in msg or "older" in msg or "2018" in msg:
         return "Cluster 0"
-    elif "pacifica" in message or "phev" in message or "short range" in message:
+    elif "pacifica" in msg or "phev" in msg or "short range" in msg:
         return "Cluster 1"
-    elif "range" in message:
-        if "200" in message or "long" in message:
+    elif "range" in msg:
+        if "200" in msg or "long" in msg:
             return "Cluster 0"
-        elif "30" in message or "short" in message:
+        elif "30" in msg or "short" in msg:
             return "Cluster 1"
         else:
             return "Cluster 2"
     else:
         return "general"
 
-def response_generator(user_type, cluster):
-    if user_type == "buyer":
-        if cluster == "Cluster 2":
-            return "Modern BEVs like Model Y offer ~198 mi range. Ideal for daily use, good resale value, and supported by growing infrastructure."
-        elif cluster == "Cluster 0":
-            return "Legacy BEVs like Model 3 offer ~235 mi range. Secondhand market is strong but check battery condition."
-        elif cluster == "Cluster 1":
-            return "PHEVs like Pacifica offer ~33 mi range. Ideal for mixed urban/suburban use. Consider upgrading to BEV in the future."
-    elif user_type == "policymaker":
-        if cluster == "Cluster 2":
-            return "Focus infrastructure spending on Cluster 2 BEVs. Prioritize fast-charging in cities and suburbs."
-        elif cluster == "Cluster 1":
-            return "Phase out subsidies for PHEVs < 50 mi. Provide upgrade credits for BEVs."
-        elif cluster == "Cluster 0":
-            return "Support battery swap programs for legacy BEVs. Encourage secondhand warranties."
-    elif user_type == "fleet_manager":
-        if cluster == "Cluster 1":
-            return "PHEVs work for now but are outdated. Upgrade fleets to BEVs for lower cost of ownership."
-        elif cluster == "Cluster 2":
-            return "Modern BEVs offer better uptime, range, and charging convenience. Ideal for modern fleets."
-        elif cluster == "Cluster 0":
-            return "Legacy BEVs might work in limited routes. Consider using them until battery efficiency drops."
-    return "Hi! I'm your EV market assistant. Ask me anything about buying, policies, or EV fleets."
+def response_generator(intent, message):
+    if intent == "recommendation":
+        return recommend_ev(message)
+    elif intent == "policy":
+        return "Governments should focus on charging infrastructure, battery recycling incentives, and phasing out fossil subsidies."
+    elif intent == "fleet":
+        return "Fleet managers should prioritize BEVs with high uptime and low cost of ownership, such as the Tesla Model Y or Kia EV6."
+    return "Hi! I'm your EV assistant. Ask me about EV models, prices, range, fleets, or policy suggestions."
 
 # ---- Streamlit UI ----
 st.set_page_config(page_title="EV Market Chatbot", page_icon="🚗")
 st.title("🚗 EV Market Advisor Chatbot")
 
-# Welcome Message
-with st.chat_message("assistant"):
-    st.markdown("Welcome! I can help you with EV buying advice, policy decisions, and fleet upgrades. Just type your question below.")
+with st.expander("ℹ️ How This Assistant Helps"):
+    st.markdown("""
+    ### 📘 Overview
+    This chatbot is powered by real-world EV market analysis across 180,000+ vehicles.
 
-# Role Selection
-role = st.selectbox("Select your role:", ["buyer", "policymaker", "fleet_manager"])
+    #### ✅ You Can Ask About:
+    - Choosing the right EV for your needs
+    - Best options for budget, family, or long distance
+    - Government EV policies & infrastructure planning
+    - Fleet upgrade and transition recommendations
+
+    #### 🚫 Limitations:
+    - No real-time vehicle availability or dealership info
+    - No region-specific pricing or incentives
+    - No mechanical troubleshooting or financial/legal advice
+
+    #### 📊 Market Highlights from Our Findings:
+    - **Cluster 2**: Modern BEVs like Model Y, great performance and infrastructure
+    - **Cluster 0**: Legacy BEVs like Model 3, good resale and range
+    - **Cluster 1**: PHEVs like Pacifica, short-range, suitable for urban fleet use
+    - BEVs dominate market share and offer average 200+ mi range
+    """)
 
 # Session state for chat history
 if "messages" not in st.session_state:
@@ -76,15 +91,13 @@ if prompt := st.chat_input("Ask me anything about EVs..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    user_type = role
-    cluster = cluster_matcher(prompt)
-    reply = response_generator(user_type, cluster)
+    intent = intent_classifier(prompt)
+    reply = response_generator(intent, prompt)
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
     with st.chat_message("assistant"):
         st.markdown(reply)
 
-    # Optional feedback
     st.markdown("**Was this helpful?**")
     col1, col2 = st.columns(2)
     with col1:
