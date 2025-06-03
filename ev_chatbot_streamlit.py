@@ -4,7 +4,7 @@ import streamlit as st
 # ---- Chatbot Logic ----
 def intent_classifier(message):
     msg = message.lower()
-    if any(x in msg for x in ["recommend", "best", "buy", "choose", "under"]):
+    if any(x in msg for x in ["recommend", "best", "buy", "choose", "under", "family", "space"]):
         return "recommendation"
     elif any(x in msg for x in ["policy", "infrastructure", "government"]):
         return "policy"
@@ -15,17 +15,17 @@ def intent_classifier(message):
 def recommend_ev(message):
     msg = message.lower()
     if "long range" in msg or "200" in msg or "high range" in msg:
-        return "I recommend the Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles). Both are ideal for distance driving."
+        return "✅ Recommended: Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles) — ideal for distance driving."
     elif "cheap" in msg or "affordable" in msg or "under 40k" in msg or "under $40k" in msg or "budget" in msg:
-        return "Consider the Nissan Leaf, Chevy Bolt, or Hyundai Kona Electric — all are priced under $40,000 and perform well for everyday use."
-    elif "family" in msg or "big" in msg:
-        return "Try the Tesla Model Y or Kia EV6. Both offer great space and safety for families."
+        return "💰 Consider: Nissan Leaf, Chevy Bolt, or Hyundai Kona Electric — All priced under $40,000."
+    elif "family" in msg or "big" in msg or "space" in msg:
+        return "👨‍👩‍👧‍👦 Best for Families: Tesla Model Y, Kia EV6, or Hyundai Ioniq 5 — spacious and highly rated for safety."
     elif "phev" in msg:
-        return "Plug-in hybrids like the Chrysler Pacifica or Toyota Prius Prime are good for mixed use but have limited electric range."
+        return "🔌 PHEVs: Chrysler Pacifica or Toyota Prius Prime — great for short-range electric and backup gas."
     elif "small" in msg:
-        return "The Mini Electric or Fiat 500e are compact and ideal for city driving."
+        return "🏙️ Small Cars: Mini Electric or Fiat 500e — compact and perfect for urban driving."
     else:
-        return "For a balanced option, Tesla Model 3 offers great range, performance, and value in the EV space."
+        return "🚘 Balanced Pick: Tesla Model 3 — excellent range, resale value, and performance."
 
 def cluster_matcher(message):
     msg = message.lower()
@@ -49,9 +49,9 @@ def response_generator(intent, message):
     if intent == "recommendation":
         return recommend_ev(message)
     elif intent == "policy":
-        return "Governments should focus on charging infrastructure, battery recycling incentives, and phasing out fossil subsidies."
+        return "📢 Policy Insight: Focus on fast-charging stations, battery recycling programs, and clean energy incentives for EV users."
     elif intent == "fleet":
-        return "Fleet managers should prioritize BEVs with high uptime and low cost of ownership, such as the Tesla Model Y or Kia EV6."
+        return "🚚 Fleet Advice: Upgrade to BEVs like Tesla Model Y or Kia EV6 — lower long-term cost and better range."
     return "Hi! I'm your EV assistant. Ask me about EV models, prices, range, fleets, or policy suggestions."
 
 # ---- Streamlit UI ----
@@ -81,9 +81,25 @@ with st.expander("ℹ️ How This Assistant Helps"):
     - BEVs dominate market share and offer average 200+ mi range
     """)
 
+# Sidebar filters for custom recommendations
+st.sidebar.header("🔍 Explore by Need")
+if st.sidebar.button("Best Long Range"):
+    st.sidebar.success(recommend_ev("long range"))
+if st.sidebar.button("Budget EVs (< $40K)"):
+    st.sidebar.success(recommend_ev("under 40k"))
+if st.sidebar.button("EVs for Families"):
+    st.sidebar.success(recommend_ev("family"))
+
 # Session state for chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# Display full historic chat
+st.markdown("---")
+st.subheader("🗂️ Chat History")
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
 # Chat Input
 if prompt := st.chat_input("Ask me anything about EVs..."):
