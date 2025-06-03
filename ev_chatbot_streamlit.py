@@ -1,5 +1,7 @@
 # streamlit_app.py
 import streamlit as st
+import base64
+import pandas as pd
 
 # ---- Chatbot Logic ----
 def intent_classifier(message):
@@ -100,6 +102,21 @@ st.subheader("🗂️ Chat History")
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
+
+# Download chat history as CSV
+if st.button("⬇️ Export Chat History"):
+    df = pd.DataFrame(st.session_state.messages)
+    csv = df.to_csv(index=False).encode('utf-8')
+    b64 = base64.b64encode(csv).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="ev_chat_history.csv">Click here to download chat history</a>'
+    st.markdown(href, unsafe_allow_html=True)
+
+# Language selector
+lang = st.sidebar.selectbox("🌐 Language", ["English", "Français", "العربية"], index=0)
+if lang == "Français":
+    st.toast("💬 Interface multilingue bientôt disponible !")
+elif lang == "العربية":
+    st.toast("💬 سيتم دعم اللغة العربية قريباً إن شاء الله")
 
 # Chat Input
 if prompt := st.chat_input("Ask me anything about EVs..."):
