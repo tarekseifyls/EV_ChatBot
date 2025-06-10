@@ -6,106 +6,120 @@ import base64
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
-# ---- Intent Classification Setup ----
-# Define intents and example patterns
+# ---- Define Intents and Patterns ----
 template_intents = {
-    'long_range': [
-        'long range', 'distance driving', '200 miles', 'best for long trips', 'range max'
-    ],
-    'budget': [
-        'under 40k', 'under $40k', 'cheap ev', 'affordable ev', 'budget electric'
-    ],
-    'family': [
-        'family', 'big', 'space', 'kids', 'family car'
-    ],
-    'phev': [
-        'phev', 'plug-in hybrid', 'hybrid', 'short range hybrid'
-    ],
-    'small': [
-        'small', 'compact', 'city driving', 'tiny', 'urban'
+    'recommendation': [
+        'recommend', 'best', 'buy', 'choose', 'under', 'family', 'space',
+        'wanna buy', 'purchase', 'looking to buy', 'interested in buying',
+        'suggest an EV', 'which EV', 'what EV should I buy', 'recommend me an EV'
     ],
     'policy': [
-        'policy', 'infrastructure', 'government', 'subsidies', 'incentives'
+        'policy', 'infrastructure', 'government', 'subsidies', 'incentives',
+        'support EVs', 'phase out', 'regulations'
     ],
     'fleet': [
-        'fleet', 'replace my fleet', 'upgrade fleet', 'fleet management'
+        'fleet', 'replace my fleet', 'upgrade fleet', 'fleet management', 'commercial use'
+    ],
+    'greeting': [
+        'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'
+    ],
+    'farewell': [
+        'bye', 'goodbye', 'see you', 'farewell', 'later'
     ]
 }
-# Responses for each intent
-intent_responses = {
-    'long_range': '✅ Recommended for long range: Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles).',
-    'budget': '💰 Budget-friendly EVs: Nissan Leaf, Chevy Bolt, Hyundai Kona Electric (all under $40k).',
-    'family': '👨‍👩‍👧‍👦 Best for families: Tesla Model Y, Kia EV6, or Hyundai Ioniq 5 for space and safety.',
-    'phev': '🔌 PHEVs such as Chrysler Pacifica or Toyota Prius Prime offer short electric range with backup gas.',
-    'small': '🏙️ Compact EVs: Mini Electric, Fiat 500e for easy city driving.',
-    'policy': '📢 Policy Advice: Invest in fast-charging infrastructure, battery recycling incentives, and clean energy subsidies.',
-    'fleet': '🚚 Fleet Advice: Transition to BEVs like Tesla Model Y or Kia EV6 for lower total cost of ownership.',
-    'unknown': "🚘 I'm an EV assistant. Ask me about EV models, price, range, fleets, or policy."
-}
-# Prepare training data
-patterns = []
+
+# ---- Recommendation Logic ----
+def recommend_ev(message):
+    msg = message.lower()
+    if 'long range' in msg or '200' in msg or 'distance' in msg:
+        return '✅ Long Range Picks: Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles).'
+    if 'under 40k' in msg or 'budget' in msg or 'cheap' in msg:
+        return '💰 Budget EVs: Nissan Leaf, Chevy Bolt, Hyundai Kona Electric (all under $40k).'
+    if 'family' in msg or 'space' in msg or 'kids' in msg:
+        return '👨‍👩‍👧‍👦 Family EVs: Tesla Model Y, Kia EV6, Hyundai Ioniq 5 — spacious and safe.'
+    if 'phev' in msg or 'hybrid' in msg:
+        return '🔌 PHEVs: Chrysler Pacifica or Toyota Prius Prime — short electric bursts with gas backup.'
+    if 'small' in msg or 'compact' in msg or 'city' in msg:
+        return '🏙️ Compact EVs: Mini Electric, Fiat 500e — perfect for urban driving.'
+    return '🚘 Balanced Pick: Tesla Model 3 — strong range, performance, and value.'
+
+# ---- Train Intent Classifier ----npatterns = []
 labels = []
-for intent, pats in template_intents.items():
-    for pat in pats:
-        patterns.append(pat)
+for intent, patterns in template_intents.items():
+    for p in patterns:
+        npatterns.append(p)
         labels.append(intent)
-# Train vectorizer & classifier
 vectorizer = TfidfVectorizer()
-X_train = vectorizer.fit_transform(patterns)
+X_train = vectorizer.fit_transform(npatterns)
 clf = LogisticRegression(max_iter=200)
 clf.fit(X_train, labels)
 
 def classify_intent(message):
     X_msg = vectorizer.transform([message])
     pred = clf.predict(X_msg)[0]
-    return pred if pred in intent_responses else 'unknown'
+    return pred
+
+# ---- Response Generation ----
+def response_generator(intent, message):
+    if intent == 'greeting':
+        return '👋 Hello! I am your EV market advisor. How can I help?'
+    if intent == 'farewell':
+        return '👋 Goodbye! Feel free to return for more EV advice.'
+    if intent == 'recommendation':
+        return recommend_ev(message)
+    if intent == 'policy':
+        return '📢 Policy Insight: Invest in fast-charging stations, battery recycling, and clean energy incentives.'
+    if intent == 'fleet':
+        return '🚚 Fleet Advice: Upgrade to BEVs like Tesla Model Y or Kia EV6 for lower costs and reliability.'
+    return '🤔 I didn\'t catch that. Ask about EV models, prices, range, fleets, or policies.'
 
 # ---- Streamlit UI ----
 st.set_page_config(page_title="EV Market Chatbot", page_icon="🚗")
 st.title("🚗 EV Market Advisor Chatbot")
 
-# Onboarding
+# Onboarding Section
 with st.expander("ℹ️ How This Assistant Helps"):
-    st.markdown("""
-    **This assistant uses EV market data (180k+ vehicles) to provide:
-    - EV recommendations by budget, range, family, or fleet
-    - Policy insights for government planning
-    - Fleet upgrade strategies
-    **Limitations:** no real-time availability, location-specific prices, or mechanical/legal advice.
-    """)
+    st.markdown(
+        """
+        **Powered by analysis of 180,000+ EV records.**
 
-# Sidebar quick filters
+        **Ask about:**
+        - EV recommendations (by range, budget, family)
+        - EV policy & infrastructure
+        - Fleet upgrade strategies
+
+        **Limitations:** No real-time availability or repair/legal advice.
+
+        **Market Highlights:**
+        - Modern BEVs (Model Y) lead growth
+        - Legacy BEVs (Model 3) excel in range
+        - PHEVs (Pacifica) serve short-range needs
+        """
+    )
+
+# Sidebar Quick Filters
 st.sidebar.header("🔍 Quick Recommendations")
 if st.sidebar.button("Long Range EVs"):
-    st.sidebar.success(intent_responses['long_range'])
+    st.sidebar.success(recommend_ev('long range'))
 if st.sidebar.button("Budget EVs (<$40k)"):
-    st.sidebar.success(intent_responses['budget'])
+    st.sidebar.success(recommend_ev('under 40k'))
 if st.sidebar.button("Family EVs"):
-    st.sidebar.success(intent_responses['family'])
+    st.sidebar.success(recommend_ev('family'))
 
-# EV Image Cards
+# Image Cards
 ev_dir = os.path.join(os.path.dirname(__file__), 'images')
 st.subheader("🚗 Top EV Picks")
 ev_cards = [
-    {
-        'name':'Tesla Model 3','range':'358 mi','price':'$39,990',
-        'img':os.path.join(ev_dir,'tesla_model_3.jpg')
-    },
-    {
-        'name':'Hyundai Ioniq 5','range':'303 mi','price':'$41,650',
-        'img':os.path.join(ev_dir,'hyundai_ioniq_5.jpg')
-    },
-    {
-        'name':'Chevy Bolt','range':'259 mi','price':'$26,500',
-        'img':os.path.join(ev_dir,'chevy_bolt.jpg')
-    }
+    {'name':'Tesla Model 3','range':'358 mi','price':'$39,990','img':os.path.join(ev_dir,'tesla_model_3.jpg')},
+    {'name':'Hyundai Ioniq 5','range':'303 mi','price':'$41,650','img':os.path.join(ev_dir,'hyundai_ioniq_5.jpg')},
+    {'name':'Chevy Bolt','range':'259 mi','price':'$26,500','img':os.path.join(ev_dir,'chevy_bolt.jpg')}
 ]
 cols = st.columns(len(ev_cards))
 for col, ev in zip(cols, ev_cards):
     with col:
         st.image(ev['img'], caption=f"{ev['name']} — Range: {ev['range']} | Price: {ev['price']}", use_container_width=True)
 
-# Chat history
+# Chat History & Export
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 st.markdown('---')
@@ -113,8 +127,6 @@ st.subheader('🗂️ Chat History')
 for msg in st.session_state.messages:
     with st.chat_message(msg['role']):
         st.markdown(msg['content'])
-
-# Export chat
 if st.button('⬇️ Export Chat History'):
     df = pd.DataFrame(st.session_state.messages)
     csv = df.to_csv(index=False).encode('utf-8')
@@ -122,13 +134,13 @@ if st.button('⬇️ Export Chat History'):
     href = f'<a href="data:file/csv;base64,{b64}" download="ev_chat_history.csv">Download chat history</a>'
     st.markdown(href, unsafe_allow_html=True)
 
-# Chat input
-if prompt := st.chat_input("Ask about EVs..."):
+# Chat Input
+if prompt := st.chat_input("Ask me anything about EVs..."):
     st.session_state.messages.append({'role':'user','content':prompt})
     with st.chat_message('user'):
         st.markdown(prompt)
     intent = classify_intent(prompt)
-    reply = intent_responses.get(intent, intent_responses['unknown'])
+    reply = response_generator(intent, prompt)
     st.session_state.messages.append({'role':'assistant','content':reply})
     with st.chat_message('assistant'):
         st.markdown(reply)
