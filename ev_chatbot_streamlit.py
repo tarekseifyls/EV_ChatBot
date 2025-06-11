@@ -6,18 +6,6 @@ import base64
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
-# ---- Define Intents and Example Patterns ----
-template_intents = {
-    'greeting': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
-    'farewell': ['bye', 'goodbye', 'see you', 'farewell', 'later'],
-    'recommendation': [
-        'recommend', 'best', 'buy', 'choose', 'under', 'family', 'space',
-        'wanna buy', 'purchase', 'looking to buy', 'interested in buying',
-        'suggest an EV', 'which EV', 'what EV should I buy'
-    ],
-    'policy': ['policy', 'infrastructure', 'government', 'subsidies', 'incentives', 'support EVs', 'regulations'],
-    'fleet': ['fleet', 'replace my fleet', 'upgrade fleet', 'fleet management', 'commercial use']
-}
 
 # ---- EV Recommendation Logic ----
 def recommend_ev(message):
@@ -33,6 +21,43 @@ def recommend_ev(message):
     if 'small' in msg or 'compact' in msg or 'city' in msg:
         return '🏙️ Compact EVs: Mini Electric, Fiat 500e — perfect for urban driving.'
     return '🚘 Balanced Pick: Tesla Model 3 — strong range, performance, and value.'
+
+
+# ---- Expanded Intents & Responses ----
+template_intents = {
+    'greeting': [
+        'hello','hi','hey','good morning','good afternoon','good evening'
+    ],
+    'farewell': [
+        'bye','goodbye','see you','farewell','later'
+    ],
+    'recommendation': [
+        'recommend','best','buy','choose','under','wanna buy','purchase',
+        'looking to buy','interested in buying','suggest an ev','which ev',
+        'what ev should i buy'
+    ],
+    'selling': [
+        'sell','selling','trade-in','sell my ev','want to sell','list my car'
+    ],
+    'policy': [
+        'policy','policies','infrastructure','charging infrastructure',
+        'expand charging','deploy chargers','support ev adoption',
+        'government policies','subsidies','incentives','regulations'
+    ],
+    'fleet': [
+        'fleet','replace my fleet','upgrade fleet','fleet management','commercial use'
+    ]
+}
+
+intent_responses = {
+    'greeting':  '👋 Hello! I’m your EV market advisor. How can I help today?',
+    'farewell':  '👋 Goodbye! Come back anytime for more EV insights.',
+    'recommendation': recommend_ev,  # your existing function
+    'selling':  "💸 To sell your EV: list it on top marketplaces, get a battery health report, and price it competitively.",
+    'policy':   "📢 Policy Insight: Focus on fast-charging station rollouts, battery recycling programs, and clean-energy subsidies.",
+    'fleet':    "🚚 Fleet Advice: Upgrade to BEVs like Model Y or EV6 for best uptime and total cost of ownership.",
+}
+
 
 # ---- Train Intent Classifier ----
 patterns = []
