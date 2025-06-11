@@ -8,28 +8,21 @@ from sklearn.linear_model import LogisticRegression
 
 # ---- Define Intents and Example Patterns ----
 template_intents = {
-    'greeting': [
-        'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'
-    ],
-    'farewell': [
-        'bye', 'goodbye', 'see you', 'farewell', 'later'
-    ],
+    'greeting': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
+    'farewell': ['bye', 'goodbye', 'see you', 'farewell', 'later'],
     'recommendation': [
         'recommend', 'best', 'buy', 'choose', 'under', 'family', 'space',
         'wanna buy', 'purchase', 'looking to buy', 'interested in buying',
         'suggest an EV', 'which EV', 'what EV should I buy'
     ],
     'selling': [
-        'sell', 'selling', 'trade-in', 'sell my EV', 'want to sell', 'list my car'
+        'sell', 'selling', 'sell my ev', 'want to sell', 'list my car', 'trade-in'
     ],
-    'policy': [
-        'policy', 'policies', 'infrastructure', 'charging infrastructure',
+    'policy': ['policy', 'policies', 'infrastructure', 'charging infrastructure',
         'expand charging', 'deploy chargers', 'support EV adoption',
         'government policies', 'subsidies', 'incentives', 'regulations'
     ],
-    'fleet': [
-        'fleet', 'replace my fleet', 'upgrade fleet', 'fleet management', 'commercial use'
-    ]
+    'fleet': ['fleet', 'replace my fleet', 'upgrade fleet', 'fleet management', 'commercial use']
 }
 
 # ---- Responses for Each Intent ----
@@ -37,19 +30,19 @@ intent_responses = {
     'greeting': '👋 Hello! I am your EV market advisor. How can I help today?',
     'farewell': '👋 Goodbye! Come back anytime for more EV insights.',
     'recommendation': lambda msg: (
-        '✅ Long Range Picks: Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles).'
+        '✅ Long Range Picks: Tesla Model 3 Long Range (~358 miles) or Hyundai Ioniq 6 (~361 miles).' \
         if any(x in msg.lower() for x in ['long range','200','distance']) else
-        '💰 Budget EVs: Nissan Leaf, Chevy Bolt, Hyundai Kona Electric (all under $40k).'
+        '💰 Budget EVs: Nissan Leaf, Chevy Bolt, Hyundai Kona Electric (all under $40k).' \
         if any(x in msg.lower() for x in ['under 40k','budget','cheap']) else
-        '👨‍👩‍👧‍👦 Family EVs: Tesla Model Y, Kia EV6, Hyundai Ioniq 5 — spacious and safe.'
+        '👨‍👩‍👧‍👦 Family EVs: Tesla Model Y, Kia EV6, Hyundai Ioniq 5 — spacious and safe.' \
         if any(x in msg.lower() for x in ['family','space','kids']) else
-        '🔌 PHEVs: Chrysler Pacifica or Toyota Prius Prime — short-range electric with gas backup.'
+        '🔌 PHEVs: Chrysler Pacifica or Toyota Prius Prime — short-range electric with gas backup.' \
         if any(x in msg.lower() for x in ['phev','hybrid']) else
-        '🏙️ Compact EVs: Mini Electric, Fiat 500e — perfect for urban driving.'
+        '🏙️ Compact EVs: Mini Electric, Fiat 500e — perfect for urban driving.' \
         if any(x in msg.lower() for x in ['small','compact','city']) else
         '🚘 Balanced Pick: Tesla Model 3 — strong range, performance, and value.'
     ),
-    'selling': '💸 To sell your EV: list it on major marketplaces, get a battery health report, and price competitively.',
+    'selling': '💸 To sell your EV: list it on major marketplaces, get a battery health report, and price it competitively.',
     'policy': '📢 Policy Insight: Invest in fast-charging station rollouts, battery recycling programs, and clean energy incentives.',
     'fleet': '🚚 Fleet Advice: Upgrade to BEVs like Tesla Model Y or Kia EV6 for lower long-term costs and improved reliability.',
     'unknown': "🤔 I didn't catch that. Ask me about EV models, prices, range, fleets, or policies."
