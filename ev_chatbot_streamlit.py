@@ -6,29 +6,20 @@ import base64
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
-# ---- Define Intents and Patterns ----
+# ---- Define Intents and Example Patterns ----
 template_intents = {
+    'greeting': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
+    'farewell': ['bye', 'goodbye', 'see you', 'farewell', 'later'],
     'recommendation': [
         'recommend', 'best', 'buy', 'choose', 'under', 'family', 'space',
         'wanna buy', 'purchase', 'looking to buy', 'interested in buying',
-        'suggest an EV', 'which EV', 'what EV should I buy', 'recommend me an EV'
+        'suggest an EV', 'which EV', 'what EV should I buy'
     ],
-    'policy': [
-        'policy', 'infrastructure', 'government', 'subsidies', 'incentives',
-        'support EVs', 'phase out', 'regulations'
-    ],
-    'fleet': [
-        'fleet', 'replace my fleet', 'upgrade fleet', 'fleet management', 'commercial use'
-    ],
-    'greeting': [
-        'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'
-    ],
-    'farewell': [
-        'bye', 'goodbye', 'see you', 'farewell', 'later'
-    ]
+    'policy': ['policy', 'infrastructure', 'government', 'subsidies', 'incentives', 'support EVs', 'regulations'],
+    'fleet': ['fleet', 'replace my fleet', 'upgrade fleet', 'fleet management', 'commercial use']
 }
 
-# ---- Recommendation Logic ----
+# ---- EV Recommendation Logic ----
 def recommend_ev(message):
     msg = message.lower()
     if 'long range' in msg or '200' in msg or 'distance' in msg:
@@ -43,23 +34,23 @@ def recommend_ev(message):
         return '🏙️ Compact EVs: Mini Electric, Fiat 500e — perfect for urban driving.'
     return '🚘 Balanced Pick: Tesla Model 3 — strong range, performance, and value.'
 
-# ---- Train Intent Classifier ----npatterns = []
+# ---- Train Intent Classifier ----
+patterns = []
 labels = []
-for intent, patterns in template_intents.items():
-    for p in patterns:
-        npatterns.append(p)
+for intent, pats in template_intents.items():
+    for pat in pats:
+        patterns.append(pat)
         labels.append(intent)
 vectorizer = TfidfVectorizer()
-X_train = vectorizer.fit_transform(npatterns)
+X_train = vectorizer.fit_transform(patterns)
 clf = LogisticRegression(max_iter=200)
 clf.fit(X_train, labels)
 
 def classify_intent(message):
     X_msg = vectorizer.transform([message])
-    pred = clf.predict(X_msg)[0]
-    return pred
+    return clf.predict(X_msg)[0]
 
-# ---- Response Generation ----
+# ---- Generate Response Based on Intent ----
 def response_generator(intent, message):
     if intent == 'greeting':
         return '👋 Hello! I am your EV market advisor. How can I help?'
@@ -68,10 +59,10 @@ def response_generator(intent, message):
     if intent == 'recommendation':
         return recommend_ev(message)
     if intent == 'policy':
-        return '📢 Policy Insight: Invest in fast-charging stations, battery recycling, and clean energy incentives.'
+        return '📢 Policy Insight: Invest in fast-charging infrastructure, battery recycling incentives, and clean energy subsidies.'
     if intent == 'fleet':
-        return '🚚 Fleet Advice: Upgrade to BEVs like Tesla Model Y or Kia EV6 for lower costs and reliability.'
-    return '🤔 I didn\'t catch that. Ask about EV models, prices, range, fleets, or policies.'
+        return '🚚 Fleet Advice: Upgrade to BEVs like Tesla Model Y or Kia EV6 for lower long-term cost and better range.'
+    return '🤔 I didn\'t catch that. Ask me about EV models, prices, range, fleets, or policies.'
 
 # ---- Streamlit UI ----
 st.set_page_config(page_title="EV Market Chatbot", page_icon="🚗")
@@ -84,16 +75,11 @@ with st.expander("ℹ️ How This Assistant Helps"):
         **Powered by analysis of 180,000+ EV records.**
 
         **Ask about:**
-        - EV recommendations (by range, budget, family)
-        - EV policy & infrastructure
+        - EV recommendations by range, budget, family
+        - Government EV policies & infrastructure planning
         - Fleet upgrade strategies
 
-        **Limitations:** No real-time availability or repair/legal advice.
-
-        **Market Highlights:**
-        - Modern BEVs (Model Y) lead growth
-        - Legacy BEVs (Model 3) excel in range
-        - PHEVs (Pacifica) serve short-range needs
+        **Limitations:** No real-time availability, location-specific prices, or mechanical/legal advice.
         """
     )
 
@@ -102,11 +88,11 @@ st.sidebar.header("🔍 Quick Recommendations")
 if st.sidebar.button("Long Range EVs"):
     st.sidebar.success(recommend_ev('long range'))
 if st.sidebar.button("Budget EVs (<$40k)"):
-    st.sidebar.success(recommend_ev('under 40k'))
+    st.sidebar.success(recommend_ev('budget'))
 if st.sidebar.button("Family EVs"):
     st.sidebar.success(recommend_ev('family'))
 
-# Image Cards
+# Local Image Cards
 ev_dir = os.path.join(os.path.dirname(__file__), 'images')
 st.subheader("🚗 Top EV Picks")
 ev_cards = [
@@ -119,7 +105,7 @@ for col, ev in zip(cols, ev_cards):
     with col:
         st.image(ev['img'], caption=f"{ev['name']} — Range: {ev['range']} | Price: {ev['price']}", use_container_width=True)
 
-# Chat History & Export
+# Chat History
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 st.markdown('---')
@@ -127,6 +113,8 @@ st.subheader('🗂️ Chat History')
 for msg in st.session_state.messages:
     with st.chat_message(msg['role']):
         st.markdown(msg['content'])
+
+# Export Chat History
 if st.button('⬇️ Export Chat History'):
     df = pd.DataFrame(st.session_state.messages)
     csv = df.to_csv(index=False).encode('utf-8')
